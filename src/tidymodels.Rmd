@@ -110,6 +110,35 @@ ggplot(surv_df, aes(x = age, fill = survived))+
 ## split the data
 
 ```{r}
+surv_df %>% 
+  group_by(survived) %>% 
+  summarize(n = n()) %>% 
+  ungroup() %>% 
+  mutate(prop = n / sum(n))
+
+set.seed(1245)
+
+surv_split <- initial_split(surv_df, prop = 0.80, strata = survived)
+
+surv_train_df <- training(surv_split)
+surv_test_df <- testing(surv_split)
+```
+
+## Basic model in `parsnip` 
+
+```{r}
+blr <- logistic_reg() %>% 
+  set_engine('glm')
+
+blr_fit <- blr %>% 
+  fit(survived ~ sex + pclass, data = surv_train_df)
+
+blr_fit
+
+garbage_fit <- blr %>% 
+  fit(survived ~ passenger_id + embarked, data = surv_train_df)
+
+garbage_fit
 
 ```
 
