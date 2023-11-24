@@ -142,3 +142,12 @@ garbage_fit
 
 ```
 
+```{r}
+surv_test_predict <- surv_test_df %>% 
+  mutate(predict(blr_fit, new_data = surv_test_df)) %>% 
+  mutate(predict(blr_fit, new_data = ., type = 'prob'))
+
+table(surv_test_predict %>% 
+        select(survived, .pred_class))
+```
+
