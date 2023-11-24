@@ -1,0 +1,115 @@
+---
+title: "tidymodels tutorial"
+output: html_document
+date: "2023-11-23"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(here)
+library(tidyverse)
+library(tidymodels)
+```
+
+#Basic Data Analysis
+
+```{r}
+data(diamonds)
+head(diamonds)
+
+ggplot(diamonds, aes(x = carat, y = price, color = color, shape = cut)) +
+  geom_point() +
+  theme_minimal()
+```
+
+# Manual Cross Validation
+
+## Open data
+
+```{r}
+set.seed(42)
+
+diamonds_10fold <- diamonds %>% 
+  mutate(fold = rep(1:10, length.out = n()),
+         fold = sample(fold, size = n(), replace = FALSE)) %>% 
+  mutate(random = runif(n = n()))
+```
+
+## create data folds
+
+```{r}
+diamonds_validate <- diamonds_10fold %>% 
+  filter(fold == 1)
+diamonds_train <- diamonds_10fold %>% 
+  filter(fold != 1)
+```
+
+## model training
+
+```{r}
+mdl1 <- lm(price ~ carat + cut + color,
+           data = diamonds_train)
+mdl2 <- lm(price ~ carat + cut + clarity, 
+           data = diamonds_train)
+mdl3 <- lm(price ~ carat + cut + clarity + color,
+           data = diamonds_train)
+```
+
+## Test Model
+
+```{r}
+test_df <- diamonds_validate %>% 
+  mutate(pred1 = predict(mdl1, diamonds_validate),
+         pred2 = predict(mdl2, .),
+         pred3 = predict(mdl3, .)) %>% 
+  mutate(resid1 = pred1 - price,
+         resid2 = pred2 - price,
+         resid3 = pred3 - price)
+```
+
+## RSME function
+
+```{r}
+calc_rsme <- function(x) {
+  sq_error <- x^2
+  mean_sq_error <- mean(sq_error)
+  rt_mean_sq_error <- sqrt(mean_sq_error)
+  
+  return(rt_mean_sq_error)
+}
+```
+
+## Calculate RMSE
+
+```{r}
+calc_rsme(test_df$resid1)
+calc_rsme(test_df$resid2)
+calc_rsme(test_df$resid3)
+```
+
+# `tidymodels` Approach
+
+## examining the data
+
+```{r}
+t_df <- read_csv(here("data", "titanic_survival.csv"))
+
+surv_df <- t_df %>% 
+  mutate(survived = factor(survived),
+         pclass = factor(pclass)) %>% 
+  select(-cabin, - ticket)
+
+ggplot(surv_df, aes(x = pclass, fill = survived))+
+  geom_bar()
+
+ggplot(surv_df, aes(x = age, fill = survived))+
+  geom_histogram()
+```
+
+## split the data
+
+```{r}
+
+```
+
